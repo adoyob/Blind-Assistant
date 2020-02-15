@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS){
-                    int result = mtts.setLanguage(Locale.ENGLISH);
-                    mobile_speak("Blind assistant Application e apnake Sha gotom");
+                    int result = mtts.setLanguage(new Locale("bn_BD"));
+                    mobile_speak("ব্লাইন্ড এসিসটেন্ট ‍এপলিকেশনে আপনাকে স্বাগতম");
 
                     if(result == TextToSpeech.LANG_MISSING_DATA ||
                             result == TextToSpeech.LANG_NOT_SUPPORTED){
@@ -106,12 +106,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(command.indexOf("time")!=-1)
         {
             String currentTime = new SimpleDateFormat("hh:mm aa", Locale.getDefault()).format(new Date());
-            mobile_speak("the time is "+currentTime);
+            mobile_speak("এখন সময় "+currentTime);
         }
         else if(command.indexOf("date")!=-1)
         {
             String currentDate = new SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(new Date());
-            mobile_speak("The Date is "+currentDate);
+            mobile_speak("আজকের তারিখ "+currentDate);
 
         } else if (command.indexOf("close")!=-1||command.indexOf("exit")!=-1)
         {

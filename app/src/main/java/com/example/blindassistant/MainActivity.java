@@ -18,7 +18,10 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -26,7 +29,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,6 +44,9 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    String adr, sub_city, city;
+
 
     private CardView microid;
     private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
@@ -86,8 +99,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void person_input_speak() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"bn-BD");
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,this.getPackageName());
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,3);
+        intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES",new String[]{"bn-BD"});
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
         try {
             startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT);
         } catch (Exception e) {
@@ -109,11 +126,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     try {
                         Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
                         List<Address> addressList = geocoder.getFromLocation(latitude, longitude, 1);
-                        String adr, sub_city, city;
+
                         adr = addressList.get(0).getFeatureName();
                         sub_city = addressList.get(0).getSubLocality();
                         city= addressList.get(0).getLocality();
-                        mobile_speak("আপনি এখন" + adr +","+sub_city+"যায়গায়" + city + "শহরে আছেন");
+                        Toast.makeText(MainActivity.this,"adr "+adr+" sub_city "+sub_city+" city "+city,Toast.LENGTH_LONG).show();
+
                         locationManager.removeUpdates(locationListener);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -159,14 +177,124 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (resultCode == RESULT_OK && null != data) {
                     ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
-                    processResult(result.get(0));
+                    processResult(result.get(0).trim());
 
 
                 }
             }
         }
     }
+    private void weather_service(){
 
+        String content;
+        Weather weather = new Weather();
+        try {
+            content = weather.execute("https://openweathermap.org/data/2.5/weather?q="+city+"&appid=b6907d289e10d714a6e88b30761fae22").get();
+            Toast.makeText(this,content,Toast.LENGTH_LONG).show();
+            //Log.i("contentdata",content);
+
+            JSONObject jsonObject = new JSONObject(content);
+            String weatherData = jsonObject.getString("weather");
+            String mainTemperature = jsonObject.getString("main");
+            Toast.makeText(this,weatherData,Toast.LENGTH_LONG).show();
+
+            // Log.i("weatherdata",weatherData);
+
+            JSONArray array = new JSONArray(weatherData);
+
+            String main="";
+            String description="";
+            String temperature ="";
+            String city_Name = "";
+            for (int i=0; i<array.length();i++){
+                JSONObject weatherpart = array.getJSONObject(i);
+                main= weatherpart.getString("main");
+                description = weatherpart.getString("description");
+            }
+            JSONObject mainpart = new JSONObject(mainTemperature);
+            temperature = mainpart.getString("temp");
+            double temp_int = Double.parseDouble(temperature);
+            temp_int = Math.round(temp_int);
+            int t_value = (int) temp_int;
+            String resultText = "আকাশ: "+main+"\n বর্ণনা: "+description+"\n তাপমাত্রা: "+t_value+" degree Celsius";
+            mobile_speak(resultText);
+            //Toast.makeText(this,"Temperature"+resultText,Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this,"Exception"+e.getMessage(),Toast.LENGTH_LONG).show();
+        }
+
+
+    }
+
+    private void temperature_service(){
+
+        String content;
+        Weather weather = new Weather();
+        try {
+            content = weather.execute("https://openweathermap.org/data/2.5/weather?q="+city+"&appid=b6907d289e10d714a6e88b30761fae22").get();
+            Toast.makeText(this,content,Toast.LENGTH_LONG).show();
+            //Log.i("contentdata",content);
+
+            JSONObject jsonObject = new JSONObject(content);
+            String weatherData = jsonObject.getString("weather");
+            String mainTemperature = jsonObject.getString("main");
+            Toast.makeText(this,weatherData,Toast.LENGTH_LONG).show();
+
+            JSONArray array = new JSONArray(weatherData);
+
+            String main="";
+            String description="";
+            String temperature ="";
+            String city_Name = "";
+            for (int i=0; i<array.length();i++){
+                JSONObject weatherpart = array.getJSONObject(i);
+                main= weatherpart.getString("main");
+                description = weatherpart.getString("description");
+            }
+            JSONObject mainpart = new JSONObject(mainTemperature);
+            temperature = mainpart.getString("temp");
+            double temp_int = Double.parseDouble(temperature);
+            temp_int = Math.round(temp_int);
+            int t_value = (int) temp_int;
+            String resultText = " তাপমাত্রা: "+t_value+" degree Celsius";
+            mobile_speak(resultText);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this,"Exception"+e.getMessage(),Toast.LENGTH_LONG).show();
+        }
+
+
+    }
+
+    class Weather extends AsyncTask<String,Void,String> {
+
+        @Override
+        protected String doInBackground(String... address) {
+            try {
+                URL url = new URL(address[0]);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                InputStream is = connection.getInputStream();
+                InputStreamReader irs = new InputStreamReader(is);
+
+                int data = irs.read();
+                String content = "";
+                char ch;
+                while (data != -1){
+                    ch = (char) data;
+                    content = content + ch;
+                    data = irs.read();
+                }
+                return content;
+            }catch (Exception e){
+
+            }
+            return null;
+        }
+    }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull final int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -199,20 +327,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void processResult(String command)
     {
-        command= command.toLowerCase();
-        if(command.indexOf("time")!=-1||command.indexOf("samay")!=-1||command.indexOf("somoy")!=-1)
+        Toast.makeText(MainActivity.this,"("+command+") "+command.indexOf("সময়")+" "+command.equals("সময়"),Toast.LENGTH_SHORT).show();
+
+       //int x=command.charAt(2);
+            //Toast.makeText(MainActivity.this, "(" + command.charAt(2) + ") "+x+" ", Toast.LENGTH_SHORT).show();
+
+
+
+        //int a=(int)'স',b=(int)'ম',cc=(int)'য়';
+        //Toast.makeText(MainActivity.this, "(" +a+". "+b+", "+cc, Toast.LENGTH_SHORT).show();
+        if(command.indexOf("সময়")!=-1 || command.indexOf("সময")!=-1 ||command.indexOf("টাইম")!=-1)
         {
             String currentTime = new SimpleDateFormat("hh:mm aa", Locale.getDefault()).format(new Date());
             mobile_speak("এখন সময় "+currentTime);
         }
-        else if(command.indexOf("date")!=-1||command.indexOf("tarikh")!=-1||command.indexOf("tariq")!=-1)
+        else if(command.indexOf("ডেট")!=-1||command.indexOf("তারিখ")!=-1||command.indexOf("তারিক")!=-1)
         {
-            String currentDate = new SimpleDateFormat("MM-dd-yyyy", Locale.getDefault()).format(new Date());
+            String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
             mobile_speak("আজকের তারিখ "+currentDate);
 
-        }else if (command.indexOf("location")!=-1)
+        }else if (command.indexOf("লোকেশন")!=-1||command.indexOf("অবস্থান")!=-1||command.indexOf("লোকেসন")!=-1)
         {
+
             location_service();
+            final Handler handler=new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mobile_speak("আপনি এখন" + adr +","+sub_city+"যায়গায়" + city + "শহরে আছেন");
+                }
+            },2000);
+
+
+        } else if (command.indexOf("কেমেরা")!=-1||command.indexOf("ক্যামেরা")!=-1)
+        {
+            Intent intent2=new Intent(MainActivity.this,CameraActivity.class);
+            startActivity(intent2);
+            //Intent intent2=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            //startActivity(intent2);
+
+        }else if (command.indexOf("ওয়েদার ")!=-1 || command.indexOf("টেম্পারেচার")!=-1||command.indexOf("আবহাওয়া ")!=-1){
+            location_service();
+            final Handler handler=new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    weather_service();
+                }
+            },2000);
+
+        }else if (command.indexOf("তাপমাত্রা")!=-1 || command.indexOf("টেম্পারেচার")!=-1){
+            location_service();
+            final Handler handler=new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    temperature_service();
+                }
+            },2000);
 
         } else if (command.indexOf("close")!=-1||command.indexOf("exit")!=-1)
         {

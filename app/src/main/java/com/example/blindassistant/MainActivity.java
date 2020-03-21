@@ -42,12 +42,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     String adr, sub_city, city;
 
-
+    int longt,latt;
     private CardView microid;
     private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
     private TextToSpeech mtts;
@@ -98,15 +100,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void person_input_speak() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"bn-BD");
         intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,this.getPackageName());
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,3);
         intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES",new String[]{"bn-BD"});
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "bn-BD");
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,3000);
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,3000);
         try {
+
+            Handler handler=new Handler();
             startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT);
+            Runnable r =new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            };
+           // handler.postDelayed(r,3000);
+
+
+
         } catch (Exception e) {
             mobile_speak("আপনার ডাটা অথবা ইন্টারনেট অন করুন");
             Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -123,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     double longitude = location.getLongitude();
                     double latitude = location.getLatitude();
+                    longt=(int)longitude;
+                    latt=(int)latitude;
                     try {
                         Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
                         List<Address> addressList = geocoder.getFromLocation(latitude, longitude, 1);
@@ -130,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         adr = addressList.get(0).getFeatureName();
                         sub_city = addressList.get(0).getSubLocality();
                         city= addressList.get(0).getLocality();
-                        Toast.makeText(MainActivity.this,"adr "+adr+" sub_city "+sub_city+" city "+city,Toast.LENGTH_LONG).show();
+                        //Toast.makeText(MainActivity.this,"adr "+adr+" sub_city "+sub_city+" city "+city,Toast.LENGTH_LONG).show();
+                        //Toast.makeText(MainActivity.this,"long"+(int)longitude+"lat"+(int)latitude,Toast.LENGTH_LONG).show();
 
                         locationManager.removeUpdates(locationListener);
                     } catch (IOException e) {
@@ -189,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String content;
         Weather weather = new Weather();
         try {
-            content = weather.execute("https://openweathermap.org/data/2.5/weather?q="+city+"&appid=b6907d289e10d714a6e88b30761fae22").get();
+            content = weather.execute("https://openweathermap.org/data/2.5/weather?lat="+latt+"&lon="+longt+"&appid=b6907d289e10d714a6e88b30761fae22").get();
             Toast.makeText(this,content,Toast.LENGTH_LONG).show();
             //Log.i("contentdata",content);
 
@@ -232,7 +251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String content;
         Weather weather = new Weather();
         try {
-            content = weather.execute("https://openweathermap.org/data/2.5/weather?q="+city+"&appid=b6907d289e10d714a6e88b30761fae22").get();
+            content = weather.execute("https://openweathermap.org/data/2.5/weather?lat="+latt+"&lon="+longt+"&appid=b6907d289e10d714a6e88b30761fae22").get();
             Toast.makeText(this,content,Toast.LENGTH_LONG).show();
             //Log.i("contentdata",content);
 
@@ -327,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
     private void processResult(String command)
     {
-        Toast.makeText(MainActivity.this,"("+command+") "+command.indexOf("সময়")+" "+command.equals("সময়"),Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this,"("+command+") "+command.indexOf("সময়")+" "+command.equals("সময়"),Toast.LENGTH_SHORT).show();
 
        //int x=command.charAt(2);
             //Toast.makeText(MainActivity.this, "(" + command.charAt(2) + ") "+x+" ", Toast.LENGTH_SHORT).show();

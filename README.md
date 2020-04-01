@@ -1,5 +1,5 @@
 # Blind-Assistant
-       Speak                                 Activity
+|Speak|Activity|
 time/সময়                                   TimeActicity
 date/তারিখ                                  DateActivity
 environment/পরিবেশ                       TensorflowActivity

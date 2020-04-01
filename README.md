@@ -6,5 +6,5 @@
 |date/তারিখ|DateActivity|                                  
 |environment/পরিবেশ|TensorflowActivity|
 |location/অবস্থান|LocationActivity|
-|weather/temperatau/আবহাওয়া|WeatherActicity|
+|weather/temperature/আবহাওয়া|WeatherActicity|
 

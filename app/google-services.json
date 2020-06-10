@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "887581620624",
+    "firebase_url": "https://blindassistant-900a0.firebaseio.com",
+    "project_id": "blindassistant-900a0",
+    "storage_bucket": "blindassistant-900a0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:887581620624:android:b69d049ff59419a097db15",
+        "android_client_info": {
+          "package_name": "com.example.blindassistant"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "887581620624-sjag0k6fiouluo9sjkv9ecnv90n47bjp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlsG0H4L64s8IgqkdBBqdfDIBE1na85PA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "887581620624-sjag0k6fiouluo9sjkv9ecnv90n47bjp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

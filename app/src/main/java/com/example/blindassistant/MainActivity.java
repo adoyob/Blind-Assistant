@@ -47,6 +47,10 @@ import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOption
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.MatOfRect;
+import org.opencv.face.LBPHFaceRecognizer;
 import org.tensorflow.lite.examples.detection.DetectorActivity;
 
 import java.io.IOException;
@@ -65,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static TextToSpeech mtts;
     String adr, sub_city, city,translated1,translated2;
-
+    private Storage local;
     int longt,latt;
     private CardView microid;
     private static final int REQUEST_CODE_SPEECH_INPUT = 1000;
@@ -75,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SpeechRecognizer speech ;
     private FirebaseTranslator translator;
     boolean mboolean;
+    private ArrayList<String> name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -442,7 +447,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     finalMain[0] = translated1;
                     finalDescription[0] =translated2;
 
-                    Toast.makeText(MainActivity.this,"আকাশ: "+ finalMain[0]+"বর্ণনা: "+ finalDescription[0],Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,"আকাশ: "+ finalMain[0]+" বর্ণনা: "+ finalDescription[0],Toast.LENGTH_LONG).show();
                     String resultText = "আকাশ: "+ finalMain[0] +"\n বর্ণনা: "+ finalDescription[0] +"\n তাপমাত্রা: "+t_value+" degree Celsius";
                     mobile_speak(resultText);
 
@@ -465,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Weather weather = new Weather();
         try {
             content = weather.execute("https://api.openweathermap.org/data/2.5/weather?lat="+latt+"&lon="+longt+"&appid=c84424caeb5cffc630069ff7f6db63fd&units=metric").get();
-            Toast.makeText(this,content,Toast.LENGTH_LONG).show();
+            //Toast.makeText(this,content,Toast.LENGTH_LONG).show();
             //Log.i("contentdata",content);
 
             JSONObject jsonObject = new JSONObject(content);
@@ -594,7 +599,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         } else if (command.indexOf("পরিবেশ")!=-1|| command.indexOf("এনভাযরনমেন্ট")!=-1)
         {
+
             Intent intent2=new Intent(MainActivity.this, DetectorActivity.class);
+
             intent2.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent2);
             //Intent intent2=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -611,6 +618,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     weather_service();
                 }
             },2000);
+
+        }else if (command.indexOf("পরিচিতি")!=-1)
+        {
+            Intent intent_Train=new Intent(MainActivity.this, TrainActivity1.class);
+            intent_Train.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent_Train);
+            //Intent intent2=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            //startActivity(intent2);
 
         }else if (command.indexOf("তাপমাত্রা")!=-1 || command.indexOf("টেম্পারেচার")!=-1){
             location_service();
@@ -738,4 +753,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     }
+    private BaseLoaderCallback callbackLoader = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch(status) {
+                case BaseLoaderCallback.SUCCESS:
+
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
+
 }

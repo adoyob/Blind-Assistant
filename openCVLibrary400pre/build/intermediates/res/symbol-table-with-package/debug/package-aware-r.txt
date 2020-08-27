@@ -1,0 +1,10 @@
+org.opencv
+attr camera_id
+attr show_fps
+drawable ic_launcher
+id any
+id back
+id front
+layout main
+string app_name
+styleable CameraBridgeViewBase camera_id show_fps

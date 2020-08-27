@@ -6,8 +6,16 @@
     <string name="request_permission">This app needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
     <string name="instruction">কমান্ড লাইনগুলো হলো,সময় জানতে হলে, সময় বা, টাইম বলুন।তারিখের জন্য বলুন, তারিখ বা, ডেট।লোকেশন বা অবস্থান জানতে, লোকেশন
-    বা, অবস্থান বলুন। তাপমাত্রা জানতে, টেম্পারেচার বা, তাপমাত্রা বা, ওয়েদার বলুন। ফোনের চার্জ জানতে হলে বলুন, চার্জ বা, ফোনের চার্জ। আশেপাশে কি আছে জানতে হলে বলুন
-    ,পরিবেশ বা, এনভায়রনমেন্ট। ডিকশনারি ব্যবহার করতে হলে বলুন,ইংলিশ টু বাংলা অথবা, বাংলা টু ইংলিশ। ধন্যবাদ </string>
+    বা, অবস্থান বলুন। তাপমাত্রা জানতে, টেম্পারেচার বা, তাপমাত্রা বা, ওয়েদার বলুন। ফোনের চার্জ জানতে হলে বলুন, চার্জ বা, ফোনের চার্জ। পরিচিতি পর্বে যেতে হলে বলুন
+        পরিচিতি আশেপাশে কি আছে জানতে হলে বলুন ,পরিবেশ বা, এনভায়রনমেন্ট। ডিকশনারি ব্যবহার করতে হলে বলুন,ইংলিশ টু বাংলা অথবা, বাংলা টু ইংলিশ। ধন্যবাদ </string>
     <string name="sorry_ins">দুঃখিত, নির্দেশনা জানতে বলুন,নির্দেশনা বা, কমান্ড লাইন।</string>
     <string name="install_speeh">স্বাগতম, স্ক্রিনে টাচ করে নির্দেশনা বলুন। আর নির্দেশনাগুলো জানতে হলে স্ক্রিনে টাচ করে বলুন, নির্দেশনা বা, কমান্ড লাইন</string>
+    <string name="train_ins">কমান্ড লাইন গুলো হলো, নতুন পরিচিতি যোগ করার জন্য বলুন নতুন । পুরাতন নাম জানতে বলুন পুরাতন । একজনের নাম মুছে ফেলতে বলুন ডিলিট । সবার নাম
+    মুছে ফেলতে বলুন সব ডিলিট ।  আর ফিরে যেতে চাইলে একসাথে দুইবার স্ক্রিনে টাচ করুন ।</string>
+    <string name="app_train">Train</string>
+    <string name="app_recognize">Recognition</string>
+    <string name="app_train_page">Face Training</string>
+    <string name="app_recognize_page">Face Recognizing</string>
+    <string name="picture_button">Take Photo</string>
+    <string name="recognize_button">Recognize</string>
 </resources>

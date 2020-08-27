@@ -35,15 +35,19 @@ import com.example.blindassistant.R;
 
 import java.io.IOException;
 import java.util.List;
+
+import org.opencv.android.OpenCVLoader;
 import org.tensorflow.lite.examples.detection.customview.AutoFitTextureView;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
+
+import static com.google.firebase.remoteconfig.FirebaseRemoteConfig.TAG;
 
 public class LegacyCameraConnectionFragment extends Fragment {
   private static final Logger LOGGER = new Logger();
   /** Conversion from screen rotation to JPEG orientation. */
   private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-
+  DetectorActivity detectorActivity;
   static {
     ORIENTATIONS.append(Surface.ROTATION_0, 90);
     ORIENTATIONS.append(Surface.ROTATION_90, 0);
@@ -156,6 +160,8 @@ public class LegacyCameraConnectionFragment extends Fragment {
     } else {
       textureView.setSurfaceTextureListener(surfaceTextureListener);
     }
+
+
   }
 
   @Override

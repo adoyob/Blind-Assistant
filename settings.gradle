@@ -1,2 +1,3 @@
+include ':openCVLibrary400pre'
 include ':app'
 rootProject.name='BlindAssistant'

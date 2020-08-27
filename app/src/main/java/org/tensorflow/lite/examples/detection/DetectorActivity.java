@@ -28,27 +28,49 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
+import com.example.blindassistant.FileUtils;
 import com.example.blindassistant.MainActivity;
 import com.example.blindassistant.R;
+import com.example.blindassistant.Storage;
+import com.example.blindassistant.TrainActivity;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.face.FaceRecognizer;
+import org.opencv.face.LBPHFaceRecognizer;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
 import org.tensorflow.lite.examples.detection.customview.OverlayView;
 import org.tensorflow.lite.examples.detection.customview.OverlayView.DrawCallback;
 import org.tensorflow.lite.examples.detection.env.BorderedText;
@@ -57,6 +79,8 @@ import org.tensorflow.lite.examples.detection.env.Logger;
 import org.tensorflow.lite.examples.detection.tflite.Classifier;
 import org.tensorflow.lite.examples.detection.tflite.TFLiteObjectDetectionAPIModel;
 import org.tensorflow.lite.examples.detection.tracking.MultiBoxTracker;
+
+import static org.opencv.objdetect.Objdetect.CASCADE_SCALE_IMAGE;
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -90,9 +114,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private Bitmap rgbFrameBitmap = null;
   private Bitmap croppedBitmap = null;
   private Bitmap cropCopyBitmap = null;
+  private Bitmap personCropBitmap=null;
   private Button button;
   private boolean computingDetection = false;
   private TextToSpeech mtts;
+  int pr=0;
   private long timestamp = 0;
 
   private Matrix frameToCropTransform;
@@ -101,6 +127,120 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private MultiBoxTracker tracker;
 
   private BorderedText borderedText;
+  private static String TAG = TrainActivity.class.getSimpleName();
+  private CameraBridgeViewBase openCVCamera;
+  private Mat gray;
+  private CascadeClassifier classifier;
+  private MatOfRect faces;
+  private ArrayList<String> imagesLabels=new ArrayList<String>();
+ // private ArrayList<String> personName=new ArrayList<String>();
+  private int label[] = new int[20];
+  private double predict[] = new double[20];
+  private Storage local;
+  private FaceRecognizer recognize;
+  private BaseLoaderCallback callbackLoader = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch(status) {
+                case BaseLoaderCallback.SUCCESS:
+                    faces = new MatOfRect();
+                    //openCVCamera.enableView();
+                    recognize = LBPHFaceRecognizer.create(3,8,8,8,200);
+                    //Bundle bundle=getIntent().getExtras();
+                   // imagesLabels=bundle.getStringArrayList("name");
+                    local = new Storage(DetectorActivity.this);
+                    imagesLabels=local.getListString("names");
+                    Log.i(TAG, ""+imagesLabels);
+                    classifier = FileUtils.loadXMLS(DetectorActivity.this, "lbpcascade_frontalface_improved.xml");
+                    if(!imagesLabels.isEmpty())
+                        loadData();
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
+    private boolean loadData() {
+        String filename = FileUtils.loadTrained();
+        if(filename.isEmpty())
+            return false;
+        else
+        {
+            recognize.read(filename);
+            //Toast.makeText(RecognizeActivity.this,"files= "+recognize.getDefaultName(),Toast.LENGTH_LONG).show();
+            return true;
+        }
+    }
+
+    private void getName() {
+        imagesLabels = local.getListString("names");
+        //Collections.sort(imagesLabels, String.CASE_INSENSITIVE_ORDER);
+       /* File dataPath = new File(Environment.getExternalStorageDirectory(), "BlindAssistant");
+        if (!dataPath.exists())
+            dataPath.mkdirs();
+        String filename = "names.txt";
+        File txtFile = new File(dataPath, filename);
+        int length = (int) txtFile.length();
+        byte[] bytes = new byte[length];
+        if (txtFile.exists()) {
+            try {
+                FileInputStream in = new FileInputStream(txtFile);
+                in.read(bytes);
+
+
+                in.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String contents = new String(bytes);
+            if (contents.trim().equalsIgnoreCase("null")) {
+            } else {
+                if(contents.contains("[") && contents.contains("]"))
+                {
+                    int st = contents.indexOf("[");
+                    int en = contents.indexOf("]");
+                    if(st<contents.length() && en<=contents.length()){
+                        String sb = contents.substring(st, en);
+                        sb = sb.replace("[", "");
+                        sb = sb.replace("]", "");
+                        //Toast.makeText(TrainActivity.this,"sb= "+sb+" size= "+sb.indexOf("y"),Toast.LENGTH_LONG).show();
+                        imagesLabels = new ArrayList<String>(Arrays.asList(sb.split("\\s*,\\s*")));
+
+                        Collections.sort(imagesLabels, String.CASE_INSENSITIVE_ORDER);
+
+                    }
+                }
+
+
+                //Toast.makeText(RecognizeActivity.this,"names after sort"+imagesLabels,Toast.LENGTH_LONG).show();
+                //Toast.makeText(RecognizeActivity.this,"string length"+contents.length()+" [ index "+st+" ] index"+en,Toast.LENGTH_LONG).show();
+            }
+        }*/
+    }
+    private String recognizeImage(Mat mat) {
+        String temp=null;
+        Rect rect_Crop = null;
+        for (Rect face : faces.toArray()) {
+            rect_Crop = new Rect(face.x, face.y, face.width, face.height);
+        }
+        Mat croped = new Mat(mat, rect_Crop);
+
+        recognize.predict(croped, label, predict);
+        //Toast.makeText(RecognizeActivity.this,""+label[0],Toast.LENGTH_LONG).show();
+        if (label[0] != -1 && (int) predict[0] < 169) {
+            //personName.add(imagesLabels.get(label[0] - 1));
+            temp= imagesLabels.get(label[0]-1);
+
+            //Log.i(TAG, "imageLabels: "+imagesLabels.get(label[0]-1)+", prediction: "+predict[0]+", label: "+label[0]);
+            //Toast.makeText(getApplicationContext(), "Welcome "+imagesLabels.get(label[0]-1), Toast.LENGTH_SHORT).show();
+        }
+        Log.i(TAG, "prediction0: "+predict[0]+" pred1: "+predict[1]+", label: "+label[0]+" label1: "+label[1]);
+        pr=(int)predict[0];
+        return temp;
+    }
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -111,9 +251,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     borderedText.setTypeface(Typeface.MONOSPACE);
 
     tracker = new MultiBoxTracker(this);
-
+    //onResume();
     int cropSize = TF_OD_API_INPUT_SIZE;
-
+    //getName();
     try {
       detector =
           TFLiteObjectDetectionAPIModel.create(
@@ -211,10 +351,14 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     if (SAVE_PREVIEW_BITMAP) {
       ImageUtils.saveBitmap(croppedBitmap);
     }
+
     final ArrayList<String> re = new ArrayList<String>();
+    final ArrayList<String> personLocation = new ArrayList<String>();
+    //final RectF personlocation=null;
     final ArrayList<String> reL = new ArrayList<String>();
     final ArrayList<String> reR = new ArrayList<String>();
     final ArrayList<String> reM = new ArrayList<String>();
+    final ArrayList<String> personName=new ArrayList<String>();
     runInBackground(
         new Runnable() {
           @Override
@@ -240,10 +384,66 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
             final List<Classifier.Recognition> mappedRecognitions =
                 new LinkedList<Classifier.Recognition>();
-
+            int itr=0;
             for (final Classifier.Recognition result : results) {
               final RectF location = result.getLocation();
               if (location != null && result.getConfidence() >= minimumConfidence) {
+                  if (result.getTitle().equals("person")){
+                      //LOGGER.i("left"+(int)location.left);
+                     // personLocation.add((String)"[left "+location.left+" right: "+location.right+" top: "+location.top+" bottom: "+location.bottom+" width:"+location.width()+" height:"+location.height());
+                      if(location.left>=0 && location.top>=0 && (location.width()+location.left)<=300 && (location.top+location.height())<=300){
+                          personCropBitmap=Bitmap.createBitmap(cropCopyBitmap,(int)location.left,(int)location.top,(int)location.width(),(int)location.height());
+
+                         // Log.i(TAG, "1");
+                          Bitmap tempb=personCropBitmap.copy(Config.ARGB_8888,true);
+                          gray=new Mat();
+                          Utils.bitmapToMat(tempb,gray);
+                          //Log.i(TAG, "gray "+gray.height()+"*"+gray.width());
+                          Imgproc.cvtColor(gray, gray, Imgproc.COLOR_BGR2GRAY);
+                          //Imgproc.resize(gray,gray, new org.opencv.core.Size(200,300));
+                          //personLocation.add((String)"[left "+location.left+" right: "+location.right+" top: "+location.top+" bottom: "+location.bottom+" width:"+location.width()+" height:"+location.height()+"bitmap size: "+personCropBitmap.getHeight()+"*"+personCropBitmap.getWidth()+"mat size"+gray.height()+"*"+gray.width());
+                         // Log.i(TAG, "gray2 "+gray.height()+"*"+gray.width());
+                          //Log.i(TAG, "2");
+                         // Log.i(TAG, "3_faces"+faces);
+                          //if(gray.total() == 0)
+                              //Log.i(TAG, "gray =0");
+
+                              //Log.i(TAG, "gray"+gray.total());
+                          classifier.detectMultiScale(gray,faces,1.1,3,0|CASCADE_SCALE_IMAGE, new org.opencv.core.Size(30,30));
+                          //classifier.detectMultiScale(gray,faces);
+                          //recognizeImage(gray);
+                         // Log.i(TAG, "gray4 "+gray.height()+"*"+gray.width());
+                          //Log.i(TAG, "face="+faces.empty());
+                          //recognizeImage(gray);
+                         // Log.i(TAG, "3");
+                          if(!faces.empty()) {
+                              if(faces.toArray().length > 1) {
+                                  //Toast.makeText(getApplicationContext(), "Mutliple Faces Are not allowed", Toast.LENGTH_SHORT).show();
+                              }else {
+                                  if(gray.total() == 0) {
+                                     // Log.i(TAG, "Empty gray image");
+                                      return;
+                                  }
+                                  Log.i(TAG, "4");
+                                  if(!imagesLabels.isEmpty()){
+                                      String temp=recognizeImage(gray);
+                                      if(temp!=null){
+                                          personName.add(temp+"_"+itr);
+
+                                      }
+                                  }
+
+
+
+                              }
+                          }
+                          //else {
+                              //Toast.makeText(getApplicationContext(), "Unknown Face", Toast.LENGTH_SHORT).show();
+                          //}
+                      }
+
+
+                  }
                   if(location.left<150.00){
                       if(location.right<140.00){
                           re.add((String) result.getTitle()+"_L");
@@ -272,9 +472,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setLocation(location);
                 mappedRecognitions.add(result);
+                itr++;
+
               }
             }
               for (int i = 0; i < re.size(); i++) {
+                  boolean recog=false;
                   String[] k = re.get(i).split("_");
                   String n="টি";
                   String ob_name=null;
@@ -292,15 +495,50 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                   }
 
-                  if(k[0].equals("person"))
+                  if(k[0].equals("person")){
                       n="জন";
-                  ob_name=object_name_bangla(k[0]);
-                  if(k[1].equals("L"))
-                      reL.add((String) ob_name + " " + Integer.toString(count)+" "+n);
-                  else if(k[1].equals("R"))
-                      reR.add((String) ob_name + " " + Integer.toString(count)+" "+n);
-                  else if(k[1].equals("M"))
-                      reM.add((String) ob_name + " " + Integer.toString(count)+" "+n);
+                      if(!personName.isEmpty() && personName.get(0)!=null){
+                          Log.i(TAG, "personName: "+personName);
+                          for(int q=0;q<personName.size();q++){
+                              Log.i(TAG, "personName: "+personName.get(q));
+                              String[] k2 = personName.get(q).split("_");
+                              Log.i(TAG, "k2[0]: "+k2[0]+" k2[1]: "+k2[1]);
+
+                              if(Integer.toString(i).equals(k2[1])){
+                                  ob_name=k2[0];
+                                  recog=true;
+                                  Log.i(TAG, "objName1: "+ob_name);
+                              }
+                          }
+                      }else{
+                          ob_name="মানুষ";
+                          Log.i(TAG, "objName2: "+ob_name);
+                      }
+
+                  }else if(!k[0].equals("person")){
+                      ob_name=object_name_bangla(k[0]);
+                      Log.i(TAG, "objName3: "+ob_name);
+                  }
+
+
+                  if(k[1].equals("L")){
+                      if(count==1 && recog==true){
+                          reL.add((String) ob_name + " আছেন");
+                      }else
+                          reL.add((String) ob_name + " " + Integer.toString(count)+" "+n);
+                  }
+                  else if(k[1].equals("R")) {
+                      if(count==1 && recog==true){
+                          reR.add((String) ob_name + " আছেন");
+                      }else
+                          reR.add((String) ob_name + " " + Integer.toString(count) + " " + n);
+                  }
+                  else if(k[1].equals("M")) {
+                      if(count==1 && recog==true){
+                          reM.add((String) ob_name + " আছেন");
+                      }else
+                          reM.add((String) ob_name + " " + Integer.toString(count) + " " + n);
+                  }
               }
               if(reL.isEmpty()==false) {
                   reL.add(0, "বামে");
@@ -360,8 +598,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   @Override
                   public void run() {
                      if(i==1){
-                         Toast.makeText(DetectorActivity.this,""+str_name,Toast.LENGTH_LONG).show();
+
+                         Toast.makeText(DetectorActivity.this,"name= "+personName+" stored imageLabels= "+imagesLabels+" str_name= "+str_name,Toast.LENGTH_LONG).show();
+
                          mobile_speak(str_name);
+                         //personName=new ArrayList<String>();
                      }
                      else if(i==2){
                          Toast.makeText(DetectorActivity.this,"Double clicked",Toast.LENGTH_LONG).show();
@@ -422,4 +663,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   protected void setNumThreads(final int numThreads) {
     runInBackground(() -> detector.setNumThreads(numThreads));
   }
+  @Override
+  public void onResume(){
+        super.onResume();
+        if(OpenCVLoader.initDebug()) {
+            Log.i(TAG, "System Library Loaded Successfully");
+            callbackLoader.onManagerConnected(BaseLoaderCallback.SUCCESS);
+        } else {
+            Log.i(TAG, "Unable To Load System Library");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, this, callbackLoader);
+        }
+    }
 }

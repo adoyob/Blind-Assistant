@@ -40,6 +40,7 @@
         <activity android:name=".TrainActivity1"></activity>
         <activity android:name=".DictionaryActivity" />
         <activity android:name="org.tensorflow.lite.examples.detection.DetectorActivity" />
+        <activity android:name="org.tensorflow.lite.examples.detection.DetectorActivity2" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

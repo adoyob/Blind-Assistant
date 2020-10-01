@@ -20,6 +20,8 @@ import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguag
 import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslator;
 import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions;
 
+import org.tensorflow.lite.examples.detection.DetectorActivity;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -259,7 +261,7 @@ public class DictionaryActivity extends AppCompatActivity {
                                     mobile_speak(inputText[0]+",শব্দটির ইংরেজি হল, " +translatedText+",বানান হল,"+k,(float)0.7);
                                 }
                                 finish();
-                                //Toast.makeText(MainActivity.this,"tranlate"+inputText2[0],Toast.LENGTH_LONG).show();
+
 
                             }
                         })

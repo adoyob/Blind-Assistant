@@ -45,6 +45,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguage;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslator;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -102,7 +108,8 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
     private static final int PERMS_REQUEST_CODE = 123;
     private ArrayList<Mat> images=new ArrayList<Mat>();
     private ArrayList<String> imagesLabels=new ArrayList<String>();
-    private ArrayList<String> name=new ArrayList<String>();
+    private ArrayList<String> name_bn=new ArrayList<String>();
+    private ArrayList<String>name_en=new ArrayList<>();
     private Storage local;
     private File xmlFile,txtFile,dataPath,tempImgFile,tempImgFile2;
     private String[] uniqueLabels;
@@ -116,23 +123,23 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
     private void trainfaces() {
         //if(images.isEmpty())
             //return false;
-        if(!images.isEmpty() && !name.isEmpty() && images.size()==name.size())
+        if(!images.isEmpty() && !name_en.isEmpty() && images.size()==name_en.size() )
         {
             List<Mat> imagesMatrix = new ArrayList<>();
             Log.i(TAG, "1");
             for (int i = 0; i < images.size(); i++)
                 imagesMatrix.add(images.get(i));
             Log.i(TAG, "2");
-            Set<String> uniqueLabelsSet = new HashSet<>(name); // Get all unique labels
+            Set<String> uniqueLabelsSet = new HashSet<>(name_en); // Get all unique labels
             uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
-            Log.i(TAG, "3");
             int[] classesNumbers = new int[uniqueLabels.length];
+            Log.i(TAG, "labelset "+uniqueLabelsSet);
             for (int i = 0; i < classesNumbers.length; i++)
                 classesNumbers[i] = i + 1; // Create incrementing list for each unique label starting at 1
             Log.i(TAG, "4");
-            int[] classes = new int[name.size()];
-            for (int i = 0; i < name.size(); i++) {
-                String label = name.get(i);
+            int[] classes = new int[name_en.size()];
+            for (int i = 0; i < name_en.size(); i++) {
+                String label = name_en.get(i);
                 for (int j = 0; j < uniqueLabels.length; j++) {
                     if (label.equals(uniqueLabels[j])) {
                         classes[i] = classesNumbers[j]; // Insert corresponding number
@@ -157,7 +164,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
         //return false;
     }
     public void showLabelsDialog() {
-        Set<String> uniqueLabelsSet = new HashSet<>(name); // Get all unique labels
+        Set<String> uniqueLabelsSet = new HashSet<>(name_en); // Get all unique labels
         if (!uniqueLabelsSet.isEmpty()) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Select label:");
@@ -257,15 +264,18 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
     }
     private void addLabel(String string) {
         //String label = string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1).trim().toLowerCase(Locale.US); // Make sure that the name is always uppercase and rest is lowercase
-        imagesLabels.add(string);
-        name.add(string);// Add label to list of labels
+        //imagesLabels.add(string);
+        //name_bn.add(string);// Add label to list of labels
+        name_en.add(string);
+       // translate_bangla(string,(name_bn.size()-1));
         Log.i(TAG, "Label: " + string);
-        Toast.makeText(TrainActivity.this,"images= "+images.size()+" names= "+name+"iamgeMat= "+images,Toast.LENGTH_LONG).show();
+        Toast.makeText(TrainActivity.this,"images= "+images.size()+" names= "+name_bn+"iamgeMat= "+images,Toast.LENGTH_LONG).show();
 
     }
     public void SaveImage(List<Mat> imagesMatrix,Mat vectorClasses)  {
         String filename = "lbph_trained_data.xml";
         //Log.i(TAG, "8");
+        Toast.makeText(TrainActivity.this," name= "+name_en,Toast.LENGTH_LONG).show();
         xmlFile = new File(dataPath, filename);
         recognize.train(imagesMatrix, vectorClasses);
         recognize.save(xmlFile.toString());
@@ -286,12 +296,12 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
         for (Mat mat : images) {
             Bitmap bm=Bitmap.createBitmap(mat.cols(),mat.rows(),Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mat,bm);
-            tempImgFile=new File(dataPath,name.get(i)+".png");
+            tempImgFile=new File(dataPath,name_en.get(i)+".png");
             saveToFile(bm);
 
             i=i+1;
         }
-        Toast.makeText(TrainActivity.this,"images= "+images,Toast.LENGTH_LONG).show();
+        //Toast.makeText(TrainActivity.this,"images= "+images,Toast.LENGTH_LONG).show();
         /*try {
             FileOutputStream stream = new FileOutputStream(txtFile);
             ObjectOutputStream out = new ObjectOutputStream(stream);
@@ -305,7 +315,8 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
             e.printStackTrace();
         }
 */
-        local.putListString("names", name);
+        //local.putListString("names_bn", name_bn);
+        local.putListString("names_en",name_en);
 
     }
 
@@ -342,7 +353,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                     }
                 }
                 else{
-                    name.add(stringBuilder.toString());
+                    name_bn.add(stringBuilder.toString());
                 }
             }
 
@@ -373,6 +384,42 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
         } catch (Exception e) {
             return null;
         }
+    }
+    private void translate_bangla(String inputtext1,int num) {
+
+        //Install Firebase Model English
+
+        final String[] inputText = {inputtext1};
+        FirebaseTranslatorOptions options =
+                new FirebaseTranslatorOptions.Builder()
+                        .setSourceLanguage(FirebaseTranslateLanguage.BN)
+                        .setTargetLanguage(FirebaseTranslateLanguage.EN)
+                        .build();
+        FirebaseTranslator translator =
+                FirebaseNaturalLanguage.getInstance().getTranslator(options);
+
+        translator.translate(inputText[0])
+                .addOnSuccessListener(
+                        new OnSuccessListener<String>() {
+                            @Override
+                            public void onSuccess(@NonNull String translatedText) {
+                                name_en.add(translatedText+"_"+num);
+                                finish();
+
+
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(TrainActivity.this,"exception"+e.getMessage(),Toast.LENGTH_LONG).show();
+                                mobile_speak("দুঃখিত");
+                                onBack();
+
+                                finish();
+                            }
+                        });
     }
     private void mobile_speak(String str) {
 
@@ -427,9 +474,10 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                 if(delName){
                     boolean found=false;
                     int in=0;
-                    for(String temp:name){
+                    for(String temp:name_en){
                         if(temp.equals(sentence)){
-                            name.remove(in);
+                            //name_bn.remove(in);
+                            name_en.remove(in);
                             images.remove(in);
                             found=true;
                             break;
@@ -439,12 +487,13 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
 
                     if(found){
                         trainfaces();
-                        if(name.isEmpty() && images.isEmpty()){
+                        if(name_en.isEmpty() && images.isEmpty()){
                             Boolean h=TrainActivity1.deleteDirectory(dataPath);
-                            local.putListString("names",name);
+                            //local.putListString("names_bn",name_bn);
+                            local.putListString("names_en",name_en);
                         }
                         mobile_speak(sentence+" নামটিি এবং উনার ছবি মুছে ফেলা হয়েছে");
-                        Toast.makeText(TrainActivity.this,"name: "+name+" images: "+images,Toast.LENGTH_LONG).show();
+                        Toast.makeText(TrainActivity.this,"name: "+name_bn+" images: "+images,Toast.LENGTH_LONG).show();
                     }else{
                         mobile_speak("দুঃখিত "+sentence+" নামে কিছু খুজে পাওয়া যায় নি ");
                     }
@@ -476,7 +525,33 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
 
         }
     }
+    private void person_input_speak_english() {
 
+        speech = SpeechRecognizer.createSpeechRecognizer(TrainActivity.this);
+
+
+        final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"en_US");
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,this.getPackageName());
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,3);
+        speech.setRecognitionListener(new TrainActivity.listener());
+
+        speech.startListening(intent);
+        new CountDownTimer(4000,1000){
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                speech.stopListening();
+            }
+        }.start();
+
+    }
 
 
     private void person_input_speak_bangla() {
@@ -712,12 +787,12 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                 case BaseLoaderCallback.SUCCESS:
                     faces = new MatOfRect();
                     openCVCamera.enableView();
-                    name = local.getListString("names");
-
-                    if(!name.isEmpty()) {
+                    //name_bn = local.getListString("names_bn");
+                    name_en = local.getListString("names_en");
+                    if(!name_en.isEmpty()) {
                         int i=0;
-                        for (String iamgeName : name){
-                            tempImgFile2=new File(dataPath,name.get(i)+".png");
+                        for (String iamgeName : name_en){
+                            tempImgFile2=new File(dataPath,name_en.get(i)+".png");
                             Bitmap bm=loadFromFile(tempImgFile2);
 
                             Mat temp=new Mat();
@@ -731,9 +806,8 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                     Bundle bundle=getIntent().getExtras();
                     del=bundle.getString("delete");
                     if(del.equals("yes")){
-                        Toast.makeText(TrainActivity.this,"name= "+name+" image= "+images.size()+" Mat= "+images,Toast.LENGTH_LONG).show();
                         delName=true;
-                        if(!name.isEmpty()) {
+                        if(!name_en.isEmpty()) {
 
                             final Handler handler = new Handler();
                             handler.postDelayed(new Runnable() {
@@ -748,7 +822,6 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                         }
 
                     }else if(del.equals("no")){
-                        Toast.makeText(TrainActivity.this,"name= "+name+" image= "+images.size()+" Mat= "+images,Toast.LENGTH_LONG).show();
 
                     }
 
@@ -758,7 +831,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                     //name = local.getListString("imagesLabels");
                     Log.i(TAG, "ImagesLabels "+imagesLabels);
                     //Toast.makeText(TrainActivity.this,"name= "+name+" image= "+images.size()+" Mat= "+images+" del "+del+" boolean yes "+del.equals("yes")+" boolean no "+del.equals("no"),Toast.LENGTH_LONG).show();
-
+                    Toast.makeText(TrainActivity.this,"name= "+name_en+" image= "+images.size(),Toast.LENGTH_LONG).show();
 
                     break;
                 default:

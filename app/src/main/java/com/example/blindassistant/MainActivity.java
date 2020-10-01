@@ -52,6 +52,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.MatOfRect;
 import org.opencv.face.LBPHFaceRecognizer;
 import org.tensorflow.lite.examples.detection.DetectorActivity;
+import org.tensorflow.lite.examples.detection.DetectorActivity2;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //mboolean=settings.getBoolean("FIRST_RUN",false);
         SharedPreferences ratePrefs=getSharedPreferences("First Update", 0);
         if(!ratePrefs.getBoolean("FirstTime",false)){
+
             mobile_speak(getString(R.string.install_speeh));
             SharedPreferences.Editor edit=ratePrefs.edit();
             edit.putBoolean("FirstTime",true);
@@ -148,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void dictionary_model() {
-        //Installaion of Firebase Model English
+        //Installaion of Firebase Model Bangla
         FirebaseModelManager modelManager = FirebaseModelManager.getInstance();
         FirebaseTranslateRemoteModel frModel =
                 new FirebaseTranslateRemoteModel.Builder(FirebaseTranslateLanguage.BN).build();
@@ -169,7 +171,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
 
-        //Installation Firebase Model Bangla
+
+        //Installation Firebase Model English
         FirebaseTranslateRemoteModel frModel2 =
                 new FirebaseTranslateRemoteModel.Builder(FirebaseTranslateLanguage.EN).build();
         FirebaseModelDownloadConditions conditions2 = new FirebaseModelDownloadConditions.Builder()
@@ -653,6 +656,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             intent3.putExtra("language","bangla");
             intent3.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent3);
+
+        }
+        else if (command.indexOf("টাকা")!=-1){
+            Intent intent_money=new Intent(MainActivity.this, DetectorActivity2.class);
+
+            intent_money.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent_money);
 
         }
         else if (command.indexOf("close")!=-1|| command.indexOf("exit")!=-1)

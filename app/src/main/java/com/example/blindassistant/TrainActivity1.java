@@ -1,5 +1,6 @@
 package com.example.blindassistant;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -18,6 +19,13 @@ import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguage;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslator;
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions;
 
 import org.tensorflow.lite.examples.detection.DetectorActivity;
 
@@ -72,6 +80,7 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
 
 
     }
+
     private void person_input_speak_bangla() {
         speech = SpeechRecognizer.createSpeechRecognizer(TrainActivity1.this);
 
@@ -203,7 +212,7 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
                 Toast.makeText(TrainActivity1.this,"Error: "+e.getMessage(),Toast.LENGTH_LONG).show();
             }
 
-            local.remove("names");
+            local.remove("names_en");
             name=new ArrayList<String>();
             //Log.i(TAG, "8");
             /*xmlFile = new File(dataPath, filename);
@@ -247,7 +256,7 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
     }
     @Override
     public void onClick(View v) {
-        name=local.getListString("names");
+        name=local.getListString("names_en");
         mtts.stop();
 
         i++;

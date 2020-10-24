@@ -24,7 +24,7 @@ Blind Assistant is an android application for blind or visually impaired people.
 |Face Recognition|Identity/পরিচিতি(for training face), Environment/পরিবেশ (for recognize faces)|
 |Text Messages|Text/Message/SMS|
 |News|News/খবর|
-|Command Lines|Command line/নিদর্েশনা|
+|Command Lines|Command line/নির্দেশনা|
 |About|About|
 |Exit app|Exit/Close|
 

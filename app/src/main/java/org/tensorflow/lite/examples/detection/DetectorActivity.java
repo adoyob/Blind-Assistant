@@ -165,17 +165,19 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         int i=0;
                         for (String iamgeName : name_en){
                             tempImgFile2=new File(dataPath,name_en.get(i)+".png");
-                            Bitmap bm=loadFromFile(tempImgFile2);
+                            Bitmap bm=null;
+                            if(tempImgFile2.exists()){
+                                bm=loadFromFile(tempImgFile2);
+                                Mat temp=new Mat();
+                                Utils.bitmapToMat(bm,temp);
+                                Imgproc.cvtColor(temp, temp, Imgproc.COLOR_BGR2GRAY);
+                                images.add(temp);
+                            }
 
-                            Mat temp=new Mat();
-                            Utils.bitmapToMat(bm,temp);
-                            Imgproc.cvtColor(temp, temp, Imgproc.COLOR_BGR2GRAY);
-                            images.add(temp);
                             i=i+1;
-
                         }
                     }
-                    Collections.sort(name_en, String.CASE_INSENSITIVE_ORDER);
+                    //Collections.sort(name_en, String.CASE_INSENSITIVE_ORDER);
                     Log.i(TAG, ""+imagesLabels);
                     classifier = FileUtils.loadXMLS(DetectorActivity.this, "lbpcascade_frontalface_improved.xml");
                     if(!name_en.isEmpty()){
@@ -422,7 +424,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
               final RectF location = result.getLocation();
               if (location != null && result.getConfidence() >= minimumConfidence) {
                   if (result.getTitle().equals("person")){
-                       if(location.left>=0 && location.top>=0 && (location.width()+location.left)<=300 && (location.top+location.height())<=300){
+                       if(location.left>=0 && location.top>=0 && location.width()>=0 && location.height()>=0 && (location.width()+location.left)<=300 && (location.top+location.height())<=300){
                           personCropBitmap=Bitmap.createBitmap(cropCopyBitmap,(int)location.left,(int)location.top,(int)location.width(),(int)location.height());
                           Bitmap tempb=personCropBitmap.copy(Config.ARGB_8888,true);
                           gray=new Mat();
@@ -614,10 +616,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                   @Override
                   public void run() {
                      if(i==1){
+                         Handler handler2=new Handler();
+                         handler2.postDelayed(new Runnable() {
+                             @Override
+                             public void run() {
+                                 Toast.makeText(DetectorActivity.this,"name= "+personName+" stored imageLabels= "+name_en+" label= "+label[0]+" str_name= "+str_name,Toast.LENGTH_LONG).show();
+                                 mobile_speak(str_name);
+                             }
+                         },250);
 
-                         Toast.makeText(DetectorActivity.this,"name= "+personName+" stored imageLabels= "+imagesLabels+" label= "+label[0]+" str_name= "+str_name,Toast.LENGTH_LONG).show();
-
-                         mobile_speak(str_name);
                          //personName=new ArrayList<String>();
                      }
                      else if(i==2){
@@ -653,7 +660,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   }
   private void mobile_speak(String str) {
 
-        mtts.setPitch((float) 0.8);
+        mtts.setPitch((float) 1.2);
         mtts.setSpeechRate((float) 0.8);
         mtts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
 

@@ -121,8 +121,6 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
     private SpeechRecognizer speech ;
     FaceRecognizer recognize;
     private void trainfaces() {
-        //if(images.isEmpty())
-            //return false;
         if(!images.isEmpty() && !name_en.isEmpty() && images.size()==name_en.size() )
         {
             List<Mat> imagesMatrix = new ArrayList<>();
@@ -158,116 +156,11 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
 
         }
 
-        //if(SaveImage())
-            //return true;
-
-        //return false;
     }
-    public void showLabelsDialog() {
-        Set<String> uniqueLabelsSet = new HashSet<>(name_en); // Get all unique labels
-        if (!uniqueLabelsSet.isEmpty()) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Select label:");
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    images.remove(images.size()-1);
-                }
-            });
-            builder.setCancelable(false); // Prevent the user from closing the dialog
 
-            String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array for ArrayAdapter
-            //Arrays.sort(uniqueLabels); // Sort labels alphabetically
-            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, uniqueLabels) {
-                @Override
-                public @NonNull
-                View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                    TextView textView = (TextView) super.getView(position, convertView, parent);
-                    if (getResources().getBoolean(R.bool.isTablet))
-                        textView.setTextSize(20); // Make text slightly bigger on tablets compared to phones
-                    else
-                        textView.setTextSize(18); // Increase text size a little bit
-                    return textView;
-                }
-            };
-            String[] animals = {"add new Person"};
-            builder.setItems(animals, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    switch (which) {
-                        case 0:  showEnterLabelDialog();
 
-                    }
-                }
-            });
-            ListView mListView = new ListView(this);
-            mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
-            builder.setView(mListView); // Set the ListView
-
-            final AlertDialog dialog = builder.show(); // Show dialog and store in final variable, so it can be dismissed by the ListView
-
-            mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    dialog.dismiss();
-                    addLabel(arrayAdapter.getItem(position));
-                    Log.i(TAG, "Labels Size "+imagesLabels.size()+"");
-                }
-            });
-        } else {
-            showEnterLabelDialog();
-        }
-
-    }
-    private void showEnterLabelDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Please enter your name:");
-
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        builder.setPositiveButton("Submit", null); // Set up positive button, but do not provide a listener, so we can check the string before dismissing the dialog
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                images.remove(images.size()-1);
-            }
-        });
-        builder.setCancelable(false); // User has to input a name
-        AlertDialog dialog = builder.create();
-
-        // Source: http://stackoverflow.com/a/7636468/2175837
-        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(final DialogInterface dialog) {
-                Button mButton = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE);
-                mButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        String string = input.getText().toString().trim();
-                        if (!string.isEmpty()) { // Make sure the input is valid
-                            // If input is valid, dismiss the dialog and add the label to the array
-                            dialog.dismiss();
-                            addLabel(string);
-                        }
-                    }
-                });
-            }
-        });
-        // Show keyboard, so the user can start typing straight away
-        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
-        dialog.show();
-    }
     private void addLabel(String string) {
-        //String label = string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1).trim().toLowerCase(Locale.US); // Make sure that the name is always uppercase and rest is lowercase
-        //imagesLabels.add(string);
-        //name_bn.add(string);// Add label to list of labels
         name_en.add(string);
-       // translate_bangla(string,(name_bn.size()-1));
         Log.i(TAG, "Label: " + string);
         Toast.makeText(TrainActivity.this,"images= "+images.size()+" names= "+name_bn+"iamgeMat= "+images,Toast.LENGTH_LONG).show();
 
@@ -301,21 +194,6 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
 
             i=i+1;
         }
-        //Toast.makeText(TrainActivity.this,"images= "+images,Toast.LENGTH_LONG).show();
-        /*try {
-            FileOutputStream stream = new FileOutputStream(txtFile);
-            ObjectOutputStream out = new ObjectOutputStream(stream);
-            out.reset();
-            out.writeBytes(String.valueOf(name));
-            out.close();
-            stream.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-*/
-        //local.putListString("names_bn", name_bn);
         local.putListString("names_en",name_en);
 
     }
@@ -423,7 +301,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
     }
     private void mobile_speak(String str) {
 
-        mtts.setPitch((float) 0.8);
+        mtts.setPitch((float) 1.2);
         mtts.setSpeechRate((float)0.7);
         mtts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
 
@@ -507,8 +385,9 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
 
                 }else {
                     addLabel(sentence);
-                    trainfaces();
+                    
                     mobile_speak(" নতুন "+sentence+" নামটি এবং উনার ছবি যোগ করা হয়েছে");
+					trainfaces();
                 }
 
             }
@@ -525,33 +404,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
 
         }
     }
-    private void person_input_speak_english() {
 
-        speech = SpeechRecognizer.createSpeechRecognizer(TrainActivity.this);
-
-
-        final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,"en_US");
-        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,this.getPackageName());
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,3);
-        speech.setRecognitionListener(new TrainActivity.listener());
-
-        speech.startListening(intent);
-        new CountDownTimer(4000,1000){
-
-            @Override
-            public void onTick(long millisUntilFinished) {
-
-            }
-
-            @Override
-            public void onFinish() {
-                speech.stopListening();
-            }
-        }.start();
-
-    }
 
 
     private void person_input_speak_bangla() {
@@ -591,15 +444,6 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
         setContentView(R.layout.train_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Stetho.initializeWithDefaults(this);
-
-        if (hasPermissions()){
-            Log.i(TAG, "Permission Granted Before");
-
-        }
-        else {
-            mobile_speak("কারও সাহায্য নিয়ে পারমিশনগুলো এলাউ করুন");
-            requestPerms();
-        }
         mtts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -612,7 +456,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                     if (result == TextToSpeech.LANG_MISSING_DATA ||
                             result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     } else {
-                        
+
                     }
 
                 } else {
@@ -620,6 +464,9 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                 }
             }
         });
+
+
+
         dataPath = new File(Environment.getExternalStorageDirectory(), "BlindAssistant");
         if(!dataPath.exists())
             Log.i(TAG, "filename not found");
@@ -652,38 +499,48 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
                     public void run() {
                         //Toast.makeText(TrainActivity.this,"Btn "+btn_i,Toast.LENGTH_LONG).show();
                         if (btn_i == 1) {
-                            if (del.equals("no")) {
-                                if (gray.total() == 0)
-                                    Toast.makeText(getApplicationContext(), "Can't Detect Faces", Toast.LENGTH_SHORT).show();
-                                classifier.detectMultiScale(gray, faces, 1.1, 3, 0 | CASCADE_SCALE_IMAGE, new Size(30, 30));
-                                if (!faces.empty()) {
-                                    if (faces.toArray().length > 1)
-                                        mobile_speak("কেমেরার সামনে একজন হতে হবে । আবার চেষ্টা করুন");
-                                    else {
-                                        if (gray.total() == 0) {
-                                            mobile_speak("দুঃখিত ছবি বুঝা যাচ্ছে না । আবার চেষ্টা করুন");
-                                        }
-                                        cropedImages(gray);
-                                        //showLabelsDialog();
-                                        mobile_speak("ছবি তোলা হয়েছে, এখন নাম বলুন");
-                                        final Handler handler = new Handler();
-                                        handler.postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                person_input_speak_bangla();
+                            if (hasPermissions()){
+                                Log.i(TAG, "Permission Granted Before");
+                                if (del.equals("no")) {
+                                    if (gray.total() == 0)
+                                        Toast.makeText(getApplicationContext(), "Can't Detect Faces", Toast.LENGTH_SHORT).show();
+                                    classifier.detectMultiScale(gray, faces, 1.1, 3, 0 | CASCADE_SCALE_IMAGE, new Size(30, 30));
+                                    if (!faces.empty()) {
+                                        if (faces.toArray().length > 1)
+                                            mobile_speak("কেমেরার সামনে একজন হতে হবে । আবার চেষ্টা করুন");
+                                        else {
+                                            if (gray.total() == 0) {
+                                                mobile_speak("দুঃখিত ছবি বুঝা যাচ্ছে না । আবার চেষ্টা করুন");
                                             }
-                                        }, 2000);
+                                            cropedImages(gray);
+                                            //showLabelsDialog();
+                                            mobile_speak("ছবি তোলা হয়েছে, এখন নাম বলুন");
+                                            final Handler handler = new Handler();
+                                            handler.postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    person_input_speak_bangla();
+                                                }
+                                            }, 3000);
 
-                                        Toast.makeText(getApplicationContext(), "Face Detected", Toast.LENGTH_SHORT).show();
-                                    }
-                                } else
-                                    mobile_speak("দুঃখিত ছবি বুঝা যাচ্ছে না । আবার চেষ্টা করুন");
+                                            Toast.makeText(getApplicationContext(), "Face Detected", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else
+                                        mobile_speak("দুঃখিত ছবি বুঝা যাচ্ছে না । আবার চেষ্টা করুন");
+
+                                }
 
                             }
+                            else {
+                                mobile_speak("কারও সাহায্য নিয়ে পারমিশনগুলো এলাউ করুন");
+                                requestPerms();
+                            }
+
 
                         }
                         else if (btn_i == 2) {
                             Toast.makeText(TrainActivity.this, "Double clicked", Toast.LENGTH_LONG).show();
+							trainfaces();
                             onBack();
                             //finish();
                             //onBack();
@@ -695,27 +552,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
             }
 
         });
-        /*Button back=(Button) findViewById(R.id.camera);
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(del.equals("no")) {
-                    openCVCamera.swapCamera();
-                   /* int k=openCVCamera.getmCameraIndex();
-                    Toast.makeText(TrainActivity.this,"index "+k,Toast.LENGTH_LONG).show();
-                    int index = CameraBridgeViewBase.CAMERA_ID_FRONT;
-                    if (k == CAMERA_ID_FRONT)
-                        index = CameraBridgeViewBase.CAMERA_ID_BACK;
-                    openCVCamera.disableView();
-                    openCVCamera.setCameraIndex(index);
-                    openCVCamera.setVisibility(CameraBridgeViewBase.VISIBLE);
-                    openCVCamera.setCvCameraViewListener(TrainActivity.this);
-                    openCVCamera.enableView();
 
-                }
-            }
-        });
-*/
 
 
     }
@@ -733,7 +570,7 @@ public class TrainActivity extends AppCompatActivity implements CameraBridgeView
     private boolean hasPermissions(){
         int res = 0;
         //string array of permissions,
-        String[] permissions = new String[]{Manifest.permission.CAMERA};
+        String[] permissions = new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE};
 
         for (String perms : permissions){
             res = checkCallingOrSelfPermission(perms);

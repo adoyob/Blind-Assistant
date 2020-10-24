@@ -4,10 +4,15 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -37,7 +42,8 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
     private static TextToSpeech mtts;
     private SpeechRecognizer speech ;
     private CardView microid;
-    private File xmlFile,dataPath;
+    private static final int PERMS_REQUEST_CODE = 123;
+    private File xmlFile,dataPath,tempImgFile2;
     Storage local;
     int i=0;
     private ArrayList<String> name=new ArrayList<String>();
@@ -71,11 +77,13 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
             }
         });
         microid.setOnClickListener(TrainActivity1.this);
+
+
     }
     public static void mobile_speak(String str) {
 
-        mtts.setPitch((float) 0.8);
-        mtts.setSpeechRate((float) 0.8);
+        mtts.setPitch((float) 1.2);
+        mtts.setSpeechRate((float) 0.7);
         mtts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
 
 
@@ -174,15 +182,67 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
 
         }
     }
+    @SuppressLint("WrongConstant")
+    private boolean hasPermissions(){
+        int res = 0;
+        //string array of permissions,
+        String[] permissions = new String[]{Manifest.permission.CAMERA,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE};
 
+        for (String perms : permissions){
+            res = checkCallingOrSelfPermission(perms);
+            if (!(res == PackageManager.PERMISSION_GRANTED)){
+
+                return false;
+            }
+        }
+        return true;
+    }
+    private void requestPerms(){
+
+        String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            requestPermissions(permissions,PERMS_REQUEST_CODE);
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        boolean allowed = true;
+        switch (requestCode){
+            case PERMS_REQUEST_CODE:
+                for (int res : grantResults){
+                    // if user granted all permissions.
+                    allowed = allowed && (res == PackageManager.PERMISSION_GRANTED);
+                }
+                break;
+            default:
+                // if user not granted permissions.
+                allowed = false;
+                break;
+        }
+        if (allowed){
+            //user granted all permissions we can perform our task.
+
+        }
+        else {
+            // we will give warning to user that they haven't granted permissions.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) || shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                        shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)){
+                    //Toast.makeText(this, "Permission Denied.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
     private void processResult(String sentence) {
-        if(sentence.indexOf("নতুন")!=-1||sentence.indexOf("নতুন নাম")!=-1){
+        if(sentence.indexOf("নতুন")!=-1||sentence.indexOf("নতুন নাম")!=-1||sentence.indexOf("নিউ নেম")!=-1||sentence.indexOf("নিউ")!=-1){
             Intent intent=new Intent(TrainActivity1.this, TrainActivity.class);
             intent.putExtra("delete","no");
             intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
 
-        }else if(sentence.indexOf("পুরাতন")!=-1 || sentence.indexOf("পুরাতন নাম")!=-1 || sentence.indexOf("পুরাতন নামগুলো")!=-1){
+        }else if(sentence.indexOf("পুরাতন")!=-1 || sentence.indexOf("পুরাতন নাম")!=-1 || sentence.indexOf("পুরাতন নামগুলো")!=-1|| sentence.indexOf("ওল্ড নেম")!=-1|| sentence.indexOf("ওল্ড")!=-1){
             if(!name.isEmpty()){
                 mobile_speak("নাম গুলো হল "+name);
             }else{
@@ -203,29 +263,17 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
                 dataPath = new File(Environment.getExternalStorageDirectory(), "BlindAssistant");
                 Boolean h=deleteDirectory(dataPath);
                 Toast.makeText(TrainActivity1.this,"file Found and deleted: "+h,Toast.LENGTH_LONG).show();
-                //if(dataPath.exists()) {
-                   // Boolean h=dataPath.delete();
-                   // Toast.makeText(TrainActivity1.this,"file Found and deleted: "+h,Toast.LENGTH_LONG).show();
-
-               // }
             }catch (Exception e){
                 Toast.makeText(TrainActivity1.this,"Error: "+e.getMessage(),Toast.LENGTH_LONG).show();
             }
-
             local.remove("names_en");
             name=new ArrayList<String>();
-            //Log.i(TAG, "8");
-            /*xmlFile = new File(dataPath, filename);
-            if(xmlFile.exists()){
-                local.remove("names");
-                xmlFile.delete();
-            }*/
             mobile_speak("সবার নাম এবং ছবি মুছে ফেলা হয়েছে");
-        }else if(sentence.equals("নির্দেশেনা")||sentence.equals("কমান্ড")||sentence.equals("কমান্ড লাইন")){
+        }else if(sentence.equals("নির্দেশনা")||sentence.equals("কমান্ড")||sentence.equals("কমান্ড লাইন")){
             mobile_speak(getString(R.string.train_ins));
         }
         else{
-            mobile_speak(getString(R.string.sorry_ins));
+            mobile_speak("দুঃখিত,"+sentence+" নামে কোন নির্দেশনা নেই । নির্দেশনা জানতে বলুন,নির্দেশনা বা, কমান্ড লাইন");
         }
 
     }
@@ -257,30 +305,48 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
     @Override
     public void onClick(View v) {
         name=local.getListString("names_en");
-        mtts.stop();
+        if(name.isEmpty()){
+            try{
+                dataPath = new File(Environment.getExternalStorageDirectory(), "BlindAssistant");
+                if(dataPath.exists()){
+                    Boolean h=deleteDirectory(dataPath);
+                }
 
-        i++;
-        Handler handler=new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(i==1){
-                    if(!isOnline()){
-                        mobile_speak("ইন্টারনেট সংযোগ অন করুন বা মোবাইল ডাটা অন করুন");
-                    }else{
-                        person_input_speak_bangla();
-                    }
-                    //personName=new ArrayList<String>();
-                }
-                else if(i==2){
-                    mobile_speak("হোমে ফিরে এসেছেন");
-                    Intent intent_main=new Intent(TrainActivity1.this, MainActivity.class);
-                    intent_main.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(intent_main);
-                }
-                i=0;
+            }catch(Exception e){
+
             }
-        },500);
+        }
+        if(!hasPermissions()){
+            mobile_speak("কারও সাহায্য নিয়ে পারমিশনগুলো এলাউ করুন");
+            requestPerms();
+        }
+        else{
+            mtts.stop();
+
+            i++;
+            Handler handler=new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(i==1){
+                        if(!isOnline()){
+                            mobile_speak("ইন্টারনেট সংযোগ অন করুন বা মোবাইল ডাটা অন করুন");
+                        }else{
+                            person_input_speak_bangla();
+                        }
+                        //personName=new ArrayList<String>();
+                    }
+                    else if(i==2){
+                        mobile_speak("হোমে ফিরে এসেছেন");
+                        Intent intent_main=new Intent(TrainActivity1.this, MainActivity.class);
+                        intent_main.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent_main);
+                    }
+                    i=0;
+                }
+            },500);
+        }
+
 
 
     }

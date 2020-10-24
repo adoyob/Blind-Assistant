@@ -279,7 +279,7 @@ public class DictionaryActivity extends AppCompatActivity {
     private void translate_english(String inputtext1) {
 
         Toast.makeText(DictionaryActivity.this,""+inputtext1,Toast.LENGTH_LONG).show();
-        //Install Firebase Model English
+
 
         final String[] inputText = {inputtext1};
         FirebaseTranslatorOptions options =

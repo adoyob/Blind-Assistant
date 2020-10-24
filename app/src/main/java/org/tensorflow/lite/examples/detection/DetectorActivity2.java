@@ -357,7 +357,7 @@ public class DetectorActivity2 extends CameraActivity implements OnImageAvailabl
   }
   private void mobile_speak(String str) {
 
-    mtts.setPitch((float) 0.8);
+    mtts.setPitch((float) 1.2);
     mtts.setSpeechRate((float) 0.8);
     mtts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
 

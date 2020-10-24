@@ -129,9 +129,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void startApp() {
 
-        //mobile_speak("ব্লাইন্ড এসিসটেন্ট ‍এপলিকেশনে আপনাকে স্বাগতম");
-        //SharedPreferences settings=getSharedPreferences("PREFS_NAME",0);
-        //mboolean=settings.getBoolean("FIRST_RUN",false);
+
         SharedPreferences ratePrefs=getSharedPreferences("First Update", 0);
         if(!ratePrefs.getBoolean("FirstTime",false)){
 
@@ -139,10 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             SharedPreferences.Editor edit=ratePrefs.edit();
             edit.putBoolean("FirstTime",true);
             edit.commit();
-            //settings=getSharedPreferences("PREFS_NAME",0);
-            //SharedPreferences.Editor editor=settings.edit();
-            //editor.putBoolean("FIRST_RUN",true);
-            //editor.commit();
+
         }
         else {
             mobile_speak("ব্লাইন্ড এসিসটেন্ট ‍এপলিকেশনে আপনাকে স্বাগতম");
@@ -196,15 +191,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static void mobile_speak(String str) {
 
-        mtts.setPitch((float) 0.8);
-        mtts.setSpeechRate((float) 0.8);
+        mtts.setPitch((float) 1.2);
+        mtts.setSpeechRate((float) 0.7);
         mtts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
+
 
 
     }
 
     private void person_input_speak() {
-        checkspeechAllpermission();
+        if(!haspermission()){
+            checkspeechAllpermission();
+        }
         speech = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
 
 
@@ -313,11 +311,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     }
+    private boolean haspermission(){
+        int res=0;
+        res = checkCallingOrSelfPermission(Manifest.permission.RECORD_AUDIO);
+        if(!(res==PackageManager.PERMISSION_GRANTED)){
+            mobile_speak("কারো সাহায্য নিয়ে পারমিশন এলাউ করুন");
+            return false;
+
+        }else{
+            return true;
+        }
+    }
+
 
     private void checkspeechAllpermission() {
-
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED){
-            mobile_speak("কারো সাহায্য নিয়ে পারমিশন এলাউ করুন");
+
             ActivityCompat.requestPermissions(this,new String[] {Manifest.permission.RECORD_AUDIO},1);
 
         }
@@ -622,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             },2000);
 
-        }else if (command.indexOf("পরিচিতি")!=-1)
+        }else if (command.indexOf("পরিচিতি")!=-1|| command.indexOf("আইডেন্টিটি")!=-1)
         {
             Intent intent_Train=new Intent(MainActivity.this, TrainActivity1.class);
             intent_Train.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -658,25 +667,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(intent3);
 
         }
-        else if (command.indexOf("টাকা")!=-1){
+        else if (command.indexOf("টাকা")!=-1|| command.indexOf("মানে")!=-1){
             Intent intent_money=new Intent(MainActivity.this, DetectorActivity2.class);
 
             intent_money.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent_money);
 
         }
-        else if (command.indexOf("close")!=-1|| command.indexOf("exit")!=-1)
+        else if (command.indexOf("এক্সিট")!=-1|| command.indexOf("বন্ধ")!=-1)
         {
             Process.killProcess(Process.myPid());
             System.exit(1);
 
         }
+        else if (command.indexOf("নিউজ")!=-1|| command.indexOf("খবর")!=-1)
+        {
+            Intent intent_news=new Intent(MainActivity.this, News.class);
+
+            intent_news.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent_news);
+
+
+        }
+        else if (command.indexOf("মেসেজ")!=-1|| command.indexOf("টেক্সট")!=-1||command.indexOf("এসএমএস")!=-1)
+        {
+            Intent intent_sms=new Intent(MainActivity.this, SmsActivity.class);
+
+            intent_sms.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent_sms);
+
+
+        }
         else if(command.indexOf("নির্দেশনা")!=-1||command.indexOf("কমান্ড লাইন")!=-1||command.indexOf("কমান্ড")!=-1){
             mobile_speak(getString(R.string.instruction));
 
+        }else if(command.indexOf("এবাউট")!=-1){
+            mobile_speak(getString(R.string.about));
+
         }
         else{
-            mobile_speak(getString(R.string.sorry_ins));
+            mobile_speak("দুঃখিত,"+command+" নামে কোন নির্দেশনা নেই । নির্দেশনা জানতে বলুন,নির্দেশনা বা, কমান্ড লাইন");
         }
     }
 

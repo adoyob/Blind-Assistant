@@ -620,7 +620,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                          handler2.postDelayed(new Runnable() {
                              @Override
                              public void run() {
-                                 Toast.makeText(DetectorActivity.this,"name= "+personName+" stored imageLabels= "+name_en+" label= "+label[0]+" str_name= "+str_name,Toast.LENGTH_LONG).show();
+                                 Toast.makeText(DetectorActivity.this,"Output_speech= "+str_name,Toast.LENGTH_LONG).show();
                                  mobile_speak(str_name);
                              }
                          },250);

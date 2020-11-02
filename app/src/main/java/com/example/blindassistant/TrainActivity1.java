@@ -337,6 +337,7 @@ public class TrainActivity1 extends AppCompatActivity implements View.OnClickLis
                         //personName=new ArrayList<String>();
                     }
                     else if(i==2){
+                        Toast.makeText(TrainActivity1.this,"Double Clicked",Toast.LENGTH_LONG).show();
                         mobile_speak("হোমে ফিরে এসেছেন");
                         Intent intent_main=new Intent(TrainActivity1.this, MainActivity.class);
                         intent_main.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);

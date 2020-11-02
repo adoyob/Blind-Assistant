@@ -591,7 +591,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String currentTime = new SimpleDateFormat("hh:mm aa", Locale.getDefault()).format(new Date());
             mobile_speak("এখন সময় "+currentTime);
         }
-        else if(command.indexOf("ডেট")!=-1|| command.indexOf("তারিখ")!=-1|| command.indexOf("তারিক")!=-1)
+        else if(command.indexOf("ডেট")!=-1|| command.indexOf("তারিখ")!=-1|| command.indexOf("তারিক")!=-1||command.indexOf("ডেইট")!=-1)
         {
             String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
             mobile_speak("আজকের তারিখ "+currentDate);

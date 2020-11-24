@@ -30,7 +30,7 @@ Blind Assistant is an android application for blind or visually impaired people.
 
 ### Demo Video
 [![Watch the Demo](https://img.youtube.com/vi/Z4lTI1dJPIc)](https://www.youtube.com/watch?v=Z4lTI1dJPIc)
-[![Watch the video](https://gifs.com/gif/blind-assistant-q7z9pk)](https://www.youtube.com/watch?v=Z4lTI1dJPIc)
+
 
 
 
